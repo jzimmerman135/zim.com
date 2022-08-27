@@ -1,0 +1,11 @@
+#blockapurple {
+    height: 93vh;
+    width: 100vw;
+    background-color: purple;
+}
+
+#shaderCanvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}

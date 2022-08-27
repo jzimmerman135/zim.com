@@ -5,7 +5,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: 20px;
+    padding-bottom: 10px;
 }
 
 #footer > hr {
@@ -17,21 +17,70 @@
     padding: 0;
     display: flex;
     flex-direction: row;
-    justify-content: space-around;
-    width: 50%;
-    margin-bottom: 30px;
-    font-size: 12px;
+    justify-content: space-evenly;
+    width: 80%;
+    font-size: 14px;
 }
-
+/* 
 #footer > div {
     margin-right: auto;
     margin-left: 50px;
+} */
+
+#footer > ul > ul {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: auto;
+    padding: 0;
+    margin: 0 20px;
 }
 
-#footer .dateName {
+#footer > ul > ul > div {
     margin: 0 auto;
-    width: 50%;
-    padding-right: auto;
+    padding-top: 10px;
+    font-size: 10px;
+    display: flex;
+    flex-direction: row;
+}
+
+#footer > ul > ul > div:first-child {
+    padding: 0;
+    font-size: inherit;
+    margin: 0;
+}
+
+#footer a {
     font-size: 12px;
-    /* border: 2px solid red; */
+    margin-right: 10px;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+@media screen and (max-width: 600px) {
+    #footer > hr {
+        width: 85%;
+    }
+    
+    #footer > ul {
+        padding: 0;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        width: 90%;
+        font-size: 14px;
+        /* padding: 10px; */
+    }
+}
+
+@media screen and (max-width: 400px) {
+    #footer > ul {
+        flex-direction: column-reverse;
+    }
+    #footer > ul > ul{
+        margin: 10px;
+    }
+
+    #footer > ul > ul > div:first-child {
+        margin: auto;
+    }
 }

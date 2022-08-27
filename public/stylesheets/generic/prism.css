@@ -48,7 +48,7 @@ pre[class*=language-]{
 .token.namespace{
     opacity:.7
 }
-.token.boolean,.token.deleted,.token.number,.token.property,.token.symbol,.token.tag{
+.token.boolean,.token.deleted,.token.number,.token.property,.token.symbol,.token.tag,.token.macro{
     color:rgb(186, 98, 4);
 }
 
@@ -64,7 +64,7 @@ pre[class*=language-]{
     color:rgb(24, 146, 195);
 }
 
-.token.atrule,.token.attr-value,.token.keyword,.token.operator,.token.directive-hash{
+.token.atrule,.token.attr-value,.token.keyword,.token.operator,.token.directive-hash,.token.directive{
     color:rgb(161, 18, 186);
 }
 .token.class-name,.token.function{
