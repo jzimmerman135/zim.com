@@ -18,6 +18,22 @@ void main() {
 }`;
 }
 
+function fetchFragShader(canvas, filepath) {
+    fetch(filepath)
+    .then(response => response.text())
+    .then((shaderSource) => {
+        startFragShader(canvas, shaderSource)
+    });
+}
+
+function fetchShadertoyShader(canvas, filepath) {
+    fetch(filepath)
+    .then(response => response.text())
+    .then((shaderSource) => {
+        startFragShader(canvas, webGLFromShadertoy(shaderSource));
+    });
+}
+
 function startFragShader(canvas, fs) {
     // Get A WebGL context
     /** @type {HTMLCanvasElement} */

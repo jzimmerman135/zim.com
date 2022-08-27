@@ -15,7 +15,8 @@
     <%- include('../partials/footer.ejs') %>
 </body>
 <script>
-insertCodeblock('codeblock1', 'python', String.raw
+const codeTags = document.getElementsByTagName('code')
+insertCodeblock(codeTags[0], 'python', String.raw
 `# school
 import professor
 def first_codeblock(some_code):

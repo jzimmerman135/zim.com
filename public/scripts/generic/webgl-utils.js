@@ -47,11 +47,6 @@
   
     /** @module webgl-utils */
   
-    function isInIFrame(w) {
-      w = w || topWindow;
-      return w !== w.top;
-    }
-  
     /**
      * Wrapped logging function.
      * @param {string} msg The message to log.

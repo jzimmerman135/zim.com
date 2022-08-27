@@ -1,11 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script>   
+        window.Prism = window.Prism || {};        
+        Prism.manual = true;
+    </script>
+
     <%- include('../partials/head') %>
+
     <title>WebGL Shader</title>
+
     <link rel="stylesheet" href="/stylesheets/special/webgl.css">
 </head>
+
+<style>
+    #mask {
+        position:fixed;
+        padding:0;
+        margin:0;
+        top:0;
+        left:0;
+        z-index: 1;
+        width: 100%;
+        height: 100%;
+        transition: 1s;
+        background: #000;
+    }
+</style>
+
 <body>
+    <div id="mask"></div>
     <div id="blockapurple">
         <canvas id="shaderCanvas"></canvas>
     </div>
@@ -28,6 +52,8 @@
         <br>
         <p>The ENTIRE fragment shader code is located below.</p>
         <pre><code id="shadercode"></code></pre>
+        <p>This is all the code it takes to run!</p>
+        <pre><code id="this website"></code></pre>
 
 
     </div>
@@ -35,29 +61,23 @@
 </body>
 
 <script src="/scripts/generic/webgl-utils.js"></script>
-<script src="/scripts/special/fragShader.js"></script>
+<script src="/scripts/special/frag-shader.js"></script>
 <script>
-    const shadertoySource = String.raw`
-void mainImage( out vec4 fragColor, in vec2 fragCoord )
-{
-    // Normalized pixel coordinates (from 0 to 1)
-    vec2 uv = fragCoord/iResolution.xy;
-
-    // Time varying pixel color
-    vec3 col = 0.5 + 0.5*cos(iTime+uv.xyx+vec3(0,2,4));
-
-    // Output to screen
-    fragColor = vec4(col,1.0);
-}
-`;
-    const fragSource = webGLFromShadertoy(shadertoySource);
-</script>
-<script>
+    window.addEventListener('load', (event) => {
+        const mask = document.getElementById('mask')
+        console.log('page is fully loaded');
+        mask.style.opacity = '0';
+        setTimeout(() => {
+            mask.remove();
+        }, 500);
+    });
+    
     const canvas = document.getElementById('shaderCanvas');
-    startFragShader(canvas, String(fragSource));
-    insertCodeblock('shadercode', 'glsl', fragSource);
-
-
+    const codeTags = document.getElementsByTagName('code');
+    
+    fetchShadertoyShader(canvas, '/scripts/shaders/waters.glsl');
+    fetchCodeblock(codeTags[0], 'glsl', '/scripts/shaders/waters.glsl');
+    fetchCodeblock(codeTags[1], 'markup', '/webgl');
 </script>
 
 </html>

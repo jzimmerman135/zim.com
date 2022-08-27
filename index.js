@@ -1,4 +1,5 @@
 const express = require('express');
+const fs = require("fs");
 
 const port = process.env.PORT || 5000;
 const app = express();
@@ -19,7 +20,11 @@ app.get('/template', function(req, res) {
 
 app.get('/webgl', function(req, res) {
     res.render('pages/webgl');
-})
+});
+
+app.get('/inject', function(req, res) {
+    res.render('pages/codeInjection');
+});
 
 console.log(`starting up on port: ${port}`);
 app.listen(port);

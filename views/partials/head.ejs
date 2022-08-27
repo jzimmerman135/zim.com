@@ -16,28 +16,8 @@
 <link rel="stylesheet" href="/stylesheets/generic/footer.css">
 <link rel="stylesheet" href="/stylesheets/generic/linklist.css">
 
+<script src="/scripts/generic/prism-utils.js"></script>
+<script src="/scripts/onload/custom-prism.js"></script>
 
-<script>
-        function insertCodeblock(id, language, src) {
-        src = src.replace(/&/g, '&amp;');
-        src = src.replace(/</g, '&lt;');
-        src = src.replace(/>/g, '&gt;');
-
-        const codeTag = document.getElementsByTagName('code')[id];
-
-        if (prismLanguages.includes(language)) {
-            codeTag.className = 'language-' + language;
-        } else if (language != null) {
-            console.error(`\'${language}\' language syntax highlighting is not supported`);
-        }
-
-        return codeTag.innerHTML = src;
-    }
-    const prismLanguages = ['c','clike','markup','css',
-                            'javascript','python', 'glsl']
-</script>
-<script src="/scripts/onload/customPrism.js"></script>
-
-    
 </script>
 
