@@ -9,18 +9,18 @@
     <div id="content">
         <h1>Hi I'm Jacob Zimmerman!</h1>
         <p>I do some coding, I play some soccer, I spend a lot of time in the woods and I paint sometimes.</p>
-        <pre><code class="language-python" id="codeblock1"></code></pre>
+        <pre><code id="codeblock1"></code></pre>
         <div></div>
     </div>
     <%- include('../partials/footer.ejs') %>
 </body>
 <script>
-insertCodeblock('codeblock1', String.raw
+insertCodeblock('codeblock1', 'python', String.raw
 `# school
 import professor
 def first_codeblock(some_code):
-    if professor.evaluate(some_code, int(class_average)) == NO_GOOD: this is th
-        print("System says you must be programmed");
+    if professor.evaluate(some_code, int(class_average)) == NO_GOOD: # last ch!
+        print("System says you must be programmed")
     else:
         print("System says you are okay")
 `);

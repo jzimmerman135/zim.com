@@ -14,13 +14,13 @@
         
         <br>
         <p>Hello this is some follow up information.</p>
-        <pre><code class="language-python" id="codeblock1"></code></pre>
+        <pre><code id="codeblock1"></code></pre>
         <div></div>
     </div>
     <%- include('../partials/footer.ejs') %>
 </body>
 <script>
-insertCodeblock('codeblock1', String.raw
+insertCodeblock('codeblock1', 'python', String.raw
 `# school
 import professor
 def first_codeblock(some_code):

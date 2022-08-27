@@ -102,6 +102,10 @@
 }
 
 @media only screen and (max-width: 600px) {
+    #nav {
+        margin-bottom: 5px;
+    }
+    
     #nav .mobile-hide {
         display: none;
     }
@@ -112,7 +116,7 @@
 
     #nav > ul a {
         padding: 8px;
-        font-size: 10px;
+        font-size: 12px;
     }
 
     #nav > a {

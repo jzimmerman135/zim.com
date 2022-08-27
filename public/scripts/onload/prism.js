@@ -3,11 +3,22 @@
 
 /* PrismJS 1.29.0
 https://prismjs.com/download.html#themes=prism&languages=markup+css+clike+javascript+c+python */
-function insertCodeblock(id, src) {
+const prismLanguages = ['c','clike','markup','css','javascript','python']
+
+function insertCodeblock(id, language, src) {
     src = src.replace(/&/g, '&amp;');
     src = src.replace(/</g, '&lt;');
     src = src.replace(/>/g, '&gt;');
-    return document.getElementsByTagName('code')[id].innerHTML = src;
+
+    const codeTag = document.getElementsByTagName('code')[id];
+
+    if (prismLanguages.includes(language)) {
+        codeTag.className = 'language-' + language;
+    } else if (language != null) {
+        console.error(`\'${language}\' language syntax highlighting is not supported`);
+    }
+
+    return codeTag.innerHTML = src;
 }
 
 var _self = "undefined" != typeof window ? window : "undefined" != typeof WorkerGlobalScope && self instanceof WorkerGlobalScope ? self : {},

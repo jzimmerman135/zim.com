@@ -14,4 +14,9 @@ app.get('/about', function(req, res) {
     res.render('pages/about')
 });
 
+app.get('/template', function(req, res) {
+    res.render('pages/about')
+});
+
+console.log('starting up on port:'+port)
 app.listen(port);
