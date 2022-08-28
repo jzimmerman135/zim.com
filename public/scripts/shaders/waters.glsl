@@ -1,243 +1,148 @@
-#define MAX_STEPS 1000
-#define MAX_DIST 50.
-#define SURF_DIST .0001
-#define TAU 6.283185
+const vec3 star_dir = vec3(0.,.199,.98);
+const vec3 star_col = vec3(1.,.5,.06)*200.;
+
 #define PI 3.141592
+#define EPS 0.005
 
-#define BOX 2.
-#define WATER 1.
-#define SKY 3.
+#define ITERS_RAY    10
+#define ITERS_NORMAL 40
+#define W_DEPTH  1.0
+#define W_SPEED  1.1
+#define W_DETAIL .4
 
-#define STEPS 100.0
-#define MDIST 40.0
-#define TAU 6.283185
-#define PI 3.141592
+const mat2 rot = mat2(cos(12.),sin(12.),-sin(12.),cos(12.));
 
-
-
-
-#define ITERS_TRACE 3
-#define ITERS_NORM 5
-
-#define HOR_SCALE 1.
-#define OCC_SPEED 1.3
-#define SCRL_SPEED .5
-
-#define DX_DET .65
-
-#define FREQ 0.8
-#define HEIGHT_DIV 1.9
-#define WEIGHT_SCL 0.3
-#define FREQ_SCL 1.4
-#define TIME_SCL .3
-#define WAV_ROT 1.2
-#define DRAG .4
-#define WAV_DIR vec2(0, 1)
-
-mat2 Rot(float a) {
-    float s=sin(a), c=cos(a);
-    return mat2(c, -s, s, c);
-}
-
-mat3 Rot3d(vec3 a, vec3 b) {
-    vec3 v = cross(a, b);
-    float c = dot(a, b);
-    mat3 I = mat3(1, 0, 0, 0, 1, 0, 0, 0, 1);         
-    mat3 m = mat3(0, -v.z, v.y, v.z, 0, -v.x, -v.y, v.x, 0);
-    return I + m + m * m / (1. + c);
-}
-
-vec2 WaveDx(vec2 wavPos, int iters, float t){
+vec3 srf(vec2 pos, int n, float time)
+{
+    pos *= W_DEPTH;
+    float freq = 0.6;
+    float t = W_SPEED*time;
+    float weight = 1.0;
+    float w = 0.0;
     vec2 dx = vec2(0);
-    vec2 wavDir = WAV_DIR;
-    float wavWeight = 1.0; 
-    wavPos+= t*SCRL_SPEED;
-    wavPos*= HOR_SCALE;
-    float wavFreq = FREQ;
-    float wavTime = OCC_SPEED*t;
-    for(int i=0;i<iters;i++){
-        wavDir*=Rot(WAV_ROT);
-        float x = dot(wavDir,wavPos)*wavFreq+wavTime; 
-        float result = exp(sin(x)-1.)*cos(x);
-        result*=wavWeight;
-        dx+= result*wavDir/pow(wavWeight,DX_DET); 
-        wavFreq*= FREQ_SCL; 
-        wavTime*= TIME_SCL;
-        wavPos-= wavDir*result*DRAG; 
-        wavWeight*= WEIGHT_SCL;
-    } 
-    float wavSum = -(pow(WEIGHT_SCL,float(iters))-1.)*HEIGHT_DIV; 
-    return dx/pow(wavSum,1.-DX_DET);
-}
-
-float Wave(vec2 wavPos, int iters, float t){
-    float wav = 0.0;
-    vec2 wavDir = WAV_DIR;
-    float wavWeight = 1.0;
-    wavPos+= t*SCRL_SPEED;
-    wavPos*= HOR_SCALE; 
-    float wavFreq = FREQ;
-    float wavTime = OCC_SPEED*t;
-    for(int i=0;i<iters;i++){
-        wavDir*=Rot(WAV_ROT);
-        float x = dot(wavDir,wavPos)*wavFreq+wavTime;
-        float wave = exp(sin(x)-1.0)*wavWeight;
-        wav+= wave;
-        wavFreq*= FREQ_SCL;
-        wavTime*= TIME_SCL;
-        wavPos-= wavDir*wave*DRAG*cos(x);
-        wavWeight*= WEIGHT_SCL;
+    
+    vec2 dir = vec2(1,0);
+    for(int i=0;i<n;i++){
+        dir = rot*dir;
+        float x = dot(dir, pos) * freq + t;
+        float wave = exp(sin(x)-1.);
+        vec2 res = vec2(wave, wave*cos(x)) * weight;
+        pos    -= dir*res.y*.48;
+        w      += res.x;
+        dx     += res.y*dir / pow(weight,W_DETAIL);
+        weight *= .8;
+        freq   *= 1.2;
+        t   *= 1.08;
     }
-    float wavSum = -(pow(WEIGHT_SCL,float(iters))-1.)*HEIGHT_DIV; 
-    return wav/wavSum;
+    float ws = (pow(.8,float(n))-1.)*-5.; //Geometric sum
+    
+    return vec3(w / ws,dx / pow(ws,1.-W_DETAIL));
 }
 
-vec3 WaveNorm(vec3 p){
-    vec2 wav = -WaveDx(p.xz, ITERS_NORM, iTime);
-    return normalize(vec3(wav.x,2.0,wav.y));
+vec3 norm(vec2 p, int n, float time){
+    return normalize(vec3(-srf(p.xy, n, time).yz,1.).xzy);
 }
 
-float sdLink( vec3 p, float le, float r1, float r2 )
+vec3 camera_ray(vec3 vo, vec2 uv, vec2 muv, float iTime)
 {
-  vec3 q = vec3( p.x, max(abs(p.y)-le,0.0), p.z );
-  return length(vec2(length(q.xy)-r1,q.z)) - r2;
+    vec3 vd = normalize(vec3(uv,1));
+    
+    //Add Mouse rotation
+    vec4 cs = vec4(cos(muv),sin(muv));
+    vd.yz = mat2(cs.y,cs.w,-cs.w,cs.y)*vd.yz;
+    vd.xz = mat2(cs.x,cs.z,-cs.z,cs.x)*vd.xz;
+    
+    vd.xy = mat2(cs.x,cs.z,-cs.z,cs.x)*vd.xy;
+    vd.zy = mat2(cs.y,cs.w,-cs.w,cs.y)*vd.zy;    
+    return vd;
 }
 
-float sdBox(vec3 p, vec3 s) {
-    p = abs(p)-s;
-	return length(max(p, 0.))+min(max(p.x, max(p.y, p.z)), 0.);
-}
-
-float sdPlane(vec3 p)
+float ray(vec3 ro, vec3 rd, float t) 
 {
-    float d = p.y - Wave(p.xz,ITERS_TRACE, iTime);
-    return d;
-}
-
-vec2 GetDist(vec3 p) {
-    vec3 co = p - vec3(4, 1, 4);
-        
-        co.zx *= Rot(iTime);
-         
-    //float dBox = sdBox(co, vec3(.5, .5, 5));
-    float dBox = sdLink(co, 1., 1., .4);
-    float dPln = sdPlane(p);
-    
-    if (dBox < dPln) 
-        return vec2(dBox, BOX);
-    return vec2(dPln, WATER);
-}
-
-vec2 RayMarch(vec3 ro, vec3 rd) {
-	float dO=0.;
-    
-    // collision.x = dist to collision
-    // collision.y = object from collision
-    vec2 collision = vec2(0); 
-    
-    for(int i=0; i< MAX_STEPS; i++) {
-    	vec3 p = ro + rd*dO;
-        collision = GetDist(p);
-        dO += collision.x; // dist to collision
-        if(dO > MAX_DIST)
-            return vec2(dO, SKY);
-            
-        if (abs(collision.x) < SURF_DIST) 
-            break;
+    vec3 p = ro+t*rd;
+    float h = 0.0;
+    for (int i=0;i<50;i++) {
+        float h = p.y-srf(p.xz,ITERS_RAY, iTime).x;
+        t+=h;
+        p+=rd*h;
+        if (h<EPS*t) return t;
     }
-    
-    return vec2(dO, collision.y);
+    return t;
 }
 
-vec3 GetNormal(vec3 p) {
-    vec2 e = vec2(.001, 0);
-    vec3 n = GetDist(p).x - vec3(GetDist(p-e.xyy).x,
-                                 GetDist(p-e.yxy).x,
-                                 GetDist(p-e.yyx).x);
-    return normalize(n);
-}
-
-vec3 GetRayDir(vec2 uv, vec3 p, vec3 l, float z) {
-    vec3 
-        f = normalize(l-p),
-        r = normalize(cross(vec3(0,1,0), f)),
-        u = cross(f,r),
-        c = f*z,
-        i = c + uv.x*r + uv.y*u;
-    return normalize(i);
-}
-
-const vec3 skyDark = vec3(.02, .01, .1);
-const vec3 skyLight = vec3(.06, .05, .40);
-const vec3 lightSource = vec3(1000000, 200000, 0);
-
-vec3 pal(float t, vec3 a, vec3 b, vec3 c, vec3 d){
-    return a+b*cos(2.0*PI*(c*t+d));
-}
-
-vec3 spc(float n,float bright){
-    float t = n;
-    vec3 a = vec3(bright);
-    return pal(n,vec3(bright),vec3(0.5),vec3(1.1),vec3(0.0,0.25,0.67));
-}
-
-vec3 SkyColor(vec3 rd, vec3 ls)
+vec3 sky(vec3 rd)
 {
-    float px = .004;
-    float rad = 0.07;
-    vec3 col = skyDark;
-    vec3 sc = spc(.25 * 1.2,.6)*1.0;
-    float a = distance(rd, normalize(ls));
-    vec3 sun = smoothstep(a-px,a+px,rad - 0.03)*sc*2.;
-    col += sun;
-    col += rad/(rad+pow(a + .1,1.7))*sc;
-    vec3 p = rd;
+    float z = rd.z*.5+.5;
+    float v = max(dot(rd,star_dir),0.);
+    vec3 star = pow(min(pow(v,5.),.992),450.)*star_col + pow(v,40.)*vec3(1.,.4,.03);
+    star *= 1.-smoothstep(4e-3,3e-3,length(rd-vec3(-.049,.291,.955)))*.7;
+    
+    float mist_col = exp(min(-rd.y*8.,0.))*0.03;
+    vec3 sky_col = mix(vec3(.2,.5,.8)*(z+1.)*.01,vec3(.25,.02,.01),z*z*.9)*1.5;
+    vec3 col = sky_col+mist_col+star;
     return col;
 }
 
-void mainImage( out vec4 fragColor, in vec2 fragCoord )
+float fresnel(vec3 rd, vec3 N, float n1, float n2)
 {
-    vec2 uv = (fragCoord-.5*iResolution.xy)/iResolution.y;
-	vec2 m = iMouse.xy/iResolution.xy;
+    float I = acos(abs(dot(rd, N))-1e-5);
+    float cosI = cos(I);
+    float cosR = n1/n2 * sin(I);
+    if(cosR > 1.) return 1.;
+    cosR = sqrt(1. - cosR * cosR);
+    float Rs = (n1*cosI - n2 * cosR)/(n1*cosI + n2 * cosR);
+    float Rp = (n1*cosR - n2 * cosI)/(n1*cosR + n2 * cosI);
+    return mix(Rs*Rs, Rp*Rp, .5);
+}
 
-    vec3 ro = vec3(5, 2, -20);
-    ro.yz *= Rot(-m.y*PI+1.5);
-    ro.xz *= Rot(-m.x*TAU);
-    ro.y = clamp(ro.y, 0.0, 50.0);
+void mainImage( out vec4 O, in vec2 u )
+{
+    vec2 R   = iResolution.xy,
+         uv  = (2.*u-R)/R.x,
+         muv = (2.*iMouse.xy-R)/R.x*-float(iMouse.z>1.)*PI;    
     
-    vec3 rd = GetRayDir(uv, ro, vec3(0,2.,0), 1.);
-    vec3 col = vec3(0);
-    vec2 march = RayMarch(ro, rd);
+    //Camera
+    vec3 vo = vec3(iTime * 0.,2.01, 1.* iTime);
+    vec3 vd = camera_ray(vo,uv,muv,iTime);
+    //Sky colour
+    vec3 sky_col = sky(vd);
+    vec3 col = sky_col;
     
-    float d = march.x;
-    float obj = march.y;
-    
-    col = SkyColor(rd, lightSource);
-    vec3 p = ro + rd * d;
-    
-    if(obj == WATER) {
-        vec3 n = WaveNorm(p);
-        vec3 rfl = reflect(rd,n); 
-        float fres = clamp((pow(1. - max(0.0, dot(-n, rd)), 8.0)),0.0,1.0);
-        vec3 skyCol = SkyColor(rfl, lightSource) * fres * 0.9;
-        vec3 waterCol = clamp(spc(.05-0.1,1.2), 0., 1.);
-        waterCol *= 0.4*pow(min(p.y*0.7+1.2,.9),.5);
-        waterCol *= length(rfl)*(rd.z*0.25+0.15);
-        col += waterCol * .15;
-        col += mix(col, skyCol, d / MDIST);
+    if ((1.0-vo.y)/vd.y>0.0) {
+        //raymarch using previous pass
+        float t = 0.;
+        t = ray(vo,vd, t);
+        
+        //normal using derivative
+        vec3 p = vo+vd*t;
+        vec3 N = norm(p.xz, max(ITERS_NORMAL+min(int(log(t)*-10.),0),1), iTime);
+        
+        //Reflected ray
+        vec3 refd = reflect(vd,N);
+        //Approx reflection occlusion from other waves
+        float ref_hit = clamp((p.y+refd.y*100.-.5)*.5,0.,1.);
+        //vec3 ref_col = mix(vec3(0),sky(refd),ref_hit);
+        vec3 ref_col = mix(sky(normalize(refd+vec3(0,.2,0)))*.4,sky(refd),ref_hit);
+
+        //approx SSS
+        vec3 H = normalize(star_dir+N*.05);
+        float thick = pow(1.-p.y,2.);
+        float I = pow(max(dot(vd,H),0.), 8.)*.002;
+        vec3 ss_col = I*star_col*pow(vec3(.8,.15,.02)*.5,vec3(.3+thick*2.));
+
+        //Mix using fresnel
+        col = mix(ss_col,ref_col,fresnel(vd,N,1.,1.333));
+        
+        //Fog
+        col = mix(sky_col,col,exp(-pow(t,1.5)*.027));
+        //col = ss_col;
     }
-    else if (obj == BOX) {
-        vec3 n = GetNormal(p);
-        vec3 rfl = reflect(rd, n);   
-        float dif = dot(n, normalize(lightSource))*.5+.5;
-        col = vec3(dif);
-        col *= vec3(.5, 0, 0);
-        col = pow(col, vec3(.45));
-        col += SkyColor(rfl, lightSource);
-    }
     
-    col = pow(col, vec3(.87));	// gamma correction
-    col *= 1.0 - 0.8 * pow(length(uv * vec2(0.8,1.)), 2.7);
+    vec2 d = pow(abs(uv*.5)+.1,vec2(4.));
+	col *= pow(1.-.84*pow(d.x+d.y,.25),2.); //vignette
+    //col += col*col;
+    //col = 1.-exp(-col);
+    col = pow(col,vec3(1./1.6));
     
-    fragColor = vec4(col,1.0);
+    O = vec4(col,1.);
 }

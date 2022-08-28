@@ -24,6 +24,7 @@
 #define SCRL_SPEED 1.5
 vec2 scrollDir = vec2(1,1);
 
+
 //Built with some ideas from
 //https://www.shadertoy.com/view/wldBRf
 //https://www.shadertoy.com/view/ssG3Wt
@@ -138,7 +139,11 @@ void render( out vec4 fragColor, in vec2 fragCoord ){
     vec2 uv = (fragCoord-0.5*iResolution.xy)/min(iResolution.y,iResolution.x);
     vec3 col = vec3(0);
     vec3 ro = vec3(0,2.25,-3)*1.1;
-    
+    bool click = 0 == 0;
+    if(click){
+    ro.yz*=rot(1.*min(iMouse.y/iResolution.y-0.5,0.15));
+    ro.zx*=rot(-3.0*(iMouse.x/iResolution.x-0.5));
+    }
     vec3 lk = vec3(0,2,0);
     vec3 f = normalize(lk-ro);
     vec3 r = normalize(cross(vec3(0,1,0),f));
@@ -151,6 +156,7 @@ void render( out vec4 fragColor, in vec2 fragCoord ){
 
     float tPln = -(ro.y-1.86)/rd.y;
     if(tPln>0.){
+        if(!click)dO+=tPln;
         for(float i = 0.; i<STEPS; i++){
             p = ro+rd*dO;d = map(p);dO+=d;
             if(abs(d)<0.005||i>STEPS-2.0){
