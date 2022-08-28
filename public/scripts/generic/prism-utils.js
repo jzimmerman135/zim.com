@@ -1,5 +1,5 @@
 
-const prismLanguages = [
+var prismLanguages = [
     'c',
     'clike',
     'markup',
@@ -9,12 +9,23 @@ const prismLanguages = [
     'css'
 ];
 
+prismLanguages = new Map();
+prismLanguages.set('c', Prism.languages.c);
+prismLanguages.set('clike', Prism.languages.clike);
+prismLanguages.set('markup', Prism.languages.markup);
+prismLanguages.set('glsl', Prism.languages.glsl);
+prismLanguages.set('python', Prism.languages.python);
+prismLanguages.set('css', Prism.languages.css);
+prismLanguages.set('javascript', Prism.languages.javascript);
+
+
 function fetchCodeblock(codeblock, language, filepath) {
     fetch(filepath)
     .then(response => response.text())
     .then((src) => {
-        insertCodeblock(codeblock, language, src);
-        Prism.highlightAll();
+        // insertCodeblock(codeblock, language, src);
+        // Prism.highlightAll();
+        manualHighlightCodeblock(codeblock, language, src);
     });
 }
 
@@ -31,17 +42,19 @@ function manualHighlightCodeblock(codeblock, language, src) {
         throw 'language not supported'
     }
     
-    src = filterArrowsAndAmpersands(src);
+    
     const prismHighlighter = prismLanguages.get(language);
 
-    codeMarkup = Prism.highlight(src, prismHighlighter, language)
+    codeMarkup = Prism.highlight(src, prismHighlighter, language);
+    src = filterArrowsAndAmpersands(src);
 
     codeblock.className = 'language-' + language;
+    codeblock.className += 'manual';
     codeblock.innerHTML = codeMarkup;
 }   
 
 function insertCodeblock(codeblock, language, src) {
-    if (!prismLanguages.includes(language)) {
+    if (!prismLanguages.has(language)) {
         console.error(`\'${language}\' language syntax highlighting is not supported`);
         throw 'language not supported';
     } 

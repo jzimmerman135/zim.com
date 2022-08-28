@@ -68,6 +68,7 @@
     margin: 20px 45px;
     padding: 20px;
     background-color: #efefef;
+    overflow: scroll;
 }
 
 #content code {
