@@ -3,10 +3,10 @@
 
 #define MAX_STEPS 200
 #define MAX_DIST 100.
-#define SURF_DIST 0.001
+#define SURF_DIST 0.01
 
 #define ITERS_RAY    10
-#define ITERS_NORMAL 40
+#define ITERS_NORMAL 30
 #define W_DEPTH  1.0
 #define W_SPEED  1.1
 #define W_DETAIL .4
@@ -18,7 +18,6 @@ const float SCENE = 4.;
 
 const vec3 sceneObjectColor = vec3(0.8745, 0.1647, 0.1647);
 const vec3 waterBaseColor = vec3(0.0706, 0.0588, 0.2353);
-const vec3 skyBaseColor = vec3(0.1412, 0.1059, 0.2863);
 const vec3 moonBaseColor = vec3(0.7961, 0.4549, 0.9294);
 const vec3 skyDarkColor = vec3(.02, .01, .1);
 const vec3 skyLightColor = vec3(.06, .05, .40);
@@ -57,7 +56,7 @@ vec3 SkyColor(vec3 rd)
     float px = .004;
     float rad = 0.025;
     float glowRad = 0.07;
-    vec3 col = skyBaseColor;
+    vec3 col = skyDarkColor;
     vec3 sc = spc(.25 * 1.2,.7)*1.0;
     float a = distance(rd, normalize(lightSource));
     vec3 sun = smoothstep(a-px,a+px,rad)*sc*2.;
@@ -97,7 +96,9 @@ const mat2 wRot = mat2(cos(12.),sin(12.),-sin(12.),cos(12.));
 vec3 srf(vec2 pos, int n)
 {
     pos.y += iTime;
+    pos.x += iTime;
     pos *= W_DEPTH;
+   
     float freq = 0.6;
     float t = W_SPEED*iTime;
     float weight = 1.0;
@@ -128,14 +129,12 @@ vec3 norm(vec2 p, int n){
 
 float WaveHeight(vec3 p)
 {
-    // return sin(p.x + iTime * .5) * .2 + cos(p.z + iTime * 12.) * .1;
-    return srf(p.xz, ITERS_RAY).x;
+    return srf(p.xz, ITERS_RAY).x * .5;
 }
 
 float WaterDist(vec3 p)
 {
     return p.y - WaveHeight(p);
-    // return p.y - WaveHeight(p);
 }
 
 vec3 WaterNormal(vec3 p)
@@ -204,7 +203,7 @@ vec3 RenderReflection(vec3 ro, vec3 rd)
     //     return RenderPixel(ro + rd * d, rd);
     // }
     if (obj == SCENE_BOX) {
-        return sceneObjectColor;
+        return sceneObjectColor * .5;
     }
     else {
         return SkyColor(rd);
@@ -246,9 +245,9 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     vec2 uv = (fragCoord-.5*iResolution.xy)/iResolution.y; // scale to screen
     vec2 m = iMouse.xy / iResolution.xy; // scale mouse to screen
 
-    vec3 ro_start = vec3(90, 7, 0);
-    vec3 ro_begin = vec3(80, 3. + sin(iTime), 0);      // ray origin start of animation
-    vec3 ro_stable = vec3(15, 5, 0);      // ray origin for 
+    vec3 ro_start = vec3(90, 4, 0);
+    vec3 ro_begin = vec3(80, 4. + sin(iTime), 0);      // ray origin start of animation
+    vec3 ro_stable = vec3(30, 1, 4);      // ray origin for 
     vec3 l = vec3(-1,2,0);                // ray look-at point
 
     // ray origin (animated)
@@ -259,9 +258,12 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     ro.xz *= Rot(-m.x * TAU);       // rotate ray origin horizontal 
     ro.y = max(ro.y, 1.);
 
-    vec3 rd = GetRayDir(uv, ro, l, 1.);   // ray direction for current pixel
+    vec3 rd = GetRayDir(uv, ro, l, 1.5);   // ray direction for current pixel
 
     vec3 col = RenderPixel(ro, rd);
+    vec2 d = pow(abs(uv*.5)+.1,vec2(4.));
+	col *= pow(1.-.84*pow(d.x+d.y,.25),2.); //vignette
+    col = pow(col,vec3(1./1.3)); // gamma correction
 
     fragColor = vec4(col, 1.0);
 }
