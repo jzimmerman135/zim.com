@@ -1,9 +1,9 @@
 #define TAU 6.283185
 #define PI 3.141592
 
-#define MAX_STEPS 200
+#define MAX_STEPS 100
 #define MAX_DIST 100.
-#define SURF_DIST 0.01
+#define SURF_DIST 0.1
 
 #define ITERS_RAY    10
 #define ITERS_NORMAL 30
@@ -96,7 +96,7 @@ const mat2 wRot = mat2(cos(12.),sin(12.),-sin(12.),cos(12.));
 vec3 srf(vec2 pos, int n)
 {
     pos.y += iTime;
-    pos.x += iTime;
+    // pos.x += iTime;
     pos *= W_DEPTH;
    
     float freq = 0.6;
@@ -134,7 +134,7 @@ float WaveHeight(vec3 p)
 
 float WaterDist(vec3 p)
 {
-    return p.y - WaveHeight(p);
+    return p.y - WaveHeight(p * .5);
 }
 
 vec3 WaterNormal(vec3 p)
@@ -144,7 +144,7 @@ vec3 WaterNormal(vec3 p)
     //                              WaterDist(p-e.yxy),
     //                              WaterDist(p-e.yyx));
     // return normalize(n);
-    return norm(p.xz, ITERS_NORMAL);
+    return norm(p.xz * .5, ITERS_NORMAL);
 }
 
 vec2 RayMarch(vec3 ro, vec3 rd)
@@ -203,7 +203,7 @@ vec3 RenderReflection(vec3 ro, vec3 rd)
     //     return RenderPixel(ro + rd * d, rd);
     // }
     if (obj == SCENE_BOX) {
-        return sceneObjectColor * .5;
+        return sceneObjectColor;
     }
     else {
         return SkyColor(rd);
@@ -245,20 +245,20 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     vec2 uv = (fragCoord-.5*iResolution.xy)/iResolution.y; // scale to screen
     vec2 m = iMouse.xy / iResolution.xy; // scale mouse to screen
 
-    vec3 ro_start = vec3(90, 4, 0);
-    vec3 ro_begin = vec3(80, 4. + sin(iTime), 0);      // ray origin start of animation
-    vec3 ro_stable = vec3(30, 1, 4);      // ray origin for 
+    vec3 ro_start = vec3(90, 6, 0);
+    vec3 ro_begin = vec3(80, 8. + sin(iTime), 0);      // ray origin start of animation
+    vec3 ro_stable = vec3(30, 5, 4);      // ray origin for 
     vec3 l = vec3(-1,2,0);                // ray look-at point
 
     // ray origin (animated)
     vec3 ro = ro_start + (ro_begin - ro_start) * smoothstep(0., 1., iTime);
     ro = ro + (ro_stable - ro) * smoothstep(.5, 5., iTime);
 
-    ro.yz *= Rot(-m.y * PI * 1.);   // rotate ray origin vertical
+    //ro.yz *= Rot(-m.y * PI * 1.);   // rotate ray origin vertical
     ro.xz *= Rot(-m.x * TAU);       // rotate ray origin horizontal 
     ro.y = max(ro.y, 1.);
 
-    vec3 rd = GetRayDir(uv, ro, l, 1.5);   // ray direction for current pixel
+    vec3 rd = GetRayDir(uv, ro, l, 1.);   // ray direction for current pixel
 
     vec3 col = RenderPixel(ro, rd);
     vec2 d = pow(abs(uv*.5)+.1,vec2(4.));
